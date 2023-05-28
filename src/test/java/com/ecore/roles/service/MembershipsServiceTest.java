@@ -14,8 +14,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static com.ecore.roles.utils.TestData.DEFAULT_MEMBERSHIP;
-import static com.ecore.roles.utils.TestData.DEVELOPER_ROLE;
+import static com.ecore.roles.utils.TestData.buildDefaultMembership;
+import static com.ecore.roles.utils.TestData.buildDeveloperRole;
+import static com.ecore.roles.utils.TestData.buildOrdinaryCoralLynxTeam;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,16 +40,20 @@ class MembershipsServiceTest {
     private TeamsService teamsService;
 
     @Test
-    public void shouldCreateMembership() {
-        Membership expectedMembership = DEFAULT_MEMBERSHIP();
+    // removed public access modifier
+    void shouldCreateMembership() {
+        Membership expectedMembership = buildDefaultMembership();
         when(roleRepository.findById(expectedMembership.getRole().getId()))
-                .thenReturn(Optional.ofNullable(DEVELOPER_ROLE()));
+                .thenReturn(Optional.ofNullable(buildDeveloperRole()));
         when(membershipRepository.findByUserIdAndTeamId(expectedMembership.getUserId(),
                 expectedMembership.getTeamId()))
                         .thenReturn(Optional.empty());
         when(membershipRepository
                 .save(expectedMembership))
                         .thenReturn(expectedMembership);
+        // added mock return to pass new Team validation
+        when(teamsService.getTeam(expectedMembership.getTeamId()))
+                .thenReturn(buildOrdinaryCoralLynxTeam());
 
         Membership actualMembership = membershipsService.assignRoleToMembership(expectedMembership);
 
@@ -58,17 +63,22 @@ class MembershipsServiceTest {
     }
 
     @Test
-    public void shouldFailToCreateMembershipWhenMembershipsIsNull() {
+    // removed public access modifier
+    void shouldFailToCreateMembershipWhenMembershipsIsNull() {
         assertThrows(NullPointerException.class,
                 () -> membershipsService.assignRoleToMembership(null));
     }
 
     @Test
-    public void shouldFailToCreateMembershipWhenItExists() {
-        Membership expectedMembership = DEFAULT_MEMBERSHIP();
+    // removed public access modifier
+    void shouldFailToCreateMembershipWhenItExists() {
+        Membership expectedMembership = buildDefaultMembership();
         when(membershipRepository.findByUserIdAndTeamId(expectedMembership.getUserId(),
                 expectedMembership.getTeamId()))
                         .thenReturn(Optional.of(expectedMembership));
+        // added mock return to pass new Team validation
+        when(teamsService.getTeam(expectedMembership.getTeamId()))
+                .thenReturn(buildOrdinaryCoralLynxTeam());
 
         ResourceExistsException exception = assertThrows(ResourceExistsException.class,
                 () -> membershipsService.assignRoleToMembership(expectedMembership));
@@ -76,13 +86,17 @@ class MembershipsServiceTest {
         assertEquals("Membership already exists", exception.getMessage());
         verify(roleRepository, times(0)).getById(any());
         verify(usersService, times(0)).getUser(any());
-        verify(teamsService, times(0)).getTeam(any());
+        verify(teamsService, times(1)).getTeam(any());
     }
 
     @Test
-    public void shouldFailToCreateMembershipWhenItHasInvalidRole() {
-        Membership expectedMembership = DEFAULT_MEMBERSHIP();
+    // removed public access modifier
+    void shouldFailToCreateMembershipWhenItHasInvalidRole() {
+        Membership expectedMembership = buildDefaultMembership();
         expectedMembership.setRole(null);
+        // added mock return to pass new Team validation
+        when(teamsService.getTeam(expectedMembership.getTeamId()))
+                .thenReturn(buildOrdinaryCoralLynxTeam());
 
         InvalidArgumentException exception = assertThrows(InvalidArgumentException.class,
                 () -> membershipsService.assignRoleToMembership(expectedMembership));
@@ -91,13 +105,13 @@ class MembershipsServiceTest {
         verify(membershipRepository, times(0)).findByUserIdAndTeamId(any(), any());
         verify(roleRepository, times(0)).getById(any());
         verify(usersService, times(0)).getUser(any());
-        verify(teamsService, times(0)).getTeam(any());
+        verify(teamsService, times(1)).getTeam(any());
     }
 
     @Test
-    public void shouldFailToGetMembershipsWhenRoleIdIsNull() {
+    // removed public access modifier
+    void shouldFailToGetMembershipsWhenRoleIdIsNull() {
         assertThrows(NullPointerException.class,
                 () -> membershipsService.getMemberships(null));
     }
-
 }

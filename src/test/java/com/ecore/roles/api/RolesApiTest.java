@@ -1,10 +1,30 @@
 package com.ecore.roles.api;
 
-import com.ecore.roles.model.Membership;
-import com.ecore.roles.model.Role;
-import com.ecore.roles.repository.RoleRepository;
-import com.ecore.roles.utils.RestAssuredHelper;
-import com.ecore.roles.web.dto.RoleDto;
+import static com.ecore.roles.utils.MockUtils.mockGetTeamById;
+import static com.ecore.roles.utils.MockUtils.mockGetUserById;
+import static com.ecore.roles.utils.RestAssuredHelper.createMembership;
+import static com.ecore.roles.utils.RestAssuredHelper.createRole;
+import static com.ecore.roles.utils.RestAssuredHelper.getRole;
+import static com.ecore.roles.utils.RestAssuredHelper.getRoles;
+import static com.ecore.roles.utils.RestAssuredHelper.sendRequest;
+import static com.ecore.roles.utils.TestData.GIANNI_USER_UUID;
+import static com.ecore.roles.utils.TestData.ORDINARY_CORAL_LYNX_TEAM_UUID;
+import static com.ecore.roles.utils.TestData.UUID_1;
+import static com.ecore.roles.utils.TestData.buildDefaultMembership;
+import static com.ecore.roles.utils.TestData.buildDeveloperRole;
+import static com.ecore.roles.utils.TestData.buildDevopsRole;
+import static com.ecore.roles.utils.TestData.buildGianniUser;
+import static com.ecore.roles.utils.TestData.buildOrdinaryCoralLynxTeam;
+import static com.ecore.roles.utils.TestData.buildProductOwnerRole;
+import static com.ecore.roles.utils.TestData.buildTesterRole;
+import static com.ecore.roles.utils.TestData.buildUserWithoutMembership;
+import static io.restassured.RestAssured.when;
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,30 +33,15 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Optional;
-
-import static com.ecore.roles.utils.MockUtils.mockGetTeamById;
-import static com.ecore.roles.utils.RestAssuredHelper.createMembership;
-import static com.ecore.roles.utils.RestAssuredHelper.createRole;
-import static com.ecore.roles.utils.RestAssuredHelper.getRole;
-import static com.ecore.roles.utils.RestAssuredHelper.getRoles;
-import static com.ecore.roles.utils.RestAssuredHelper.sendRequest;
-import static com.ecore.roles.utils.TestData.DEFAULT_MEMBERSHIP;
-import static com.ecore.roles.utils.TestData.DEVELOPER_ROLE;
-import static com.ecore.roles.utils.TestData.DEVOPS_ROLE;
-import static com.ecore.roles.utils.TestData.GIANNI_USER_UUID;
-import static com.ecore.roles.utils.TestData.ORDINARY_CORAL_LYNX_TEAM;
-import static com.ecore.roles.utils.TestData.ORDINARY_CORAL_LYNX_TEAM_UUID;
-import static com.ecore.roles.utils.TestData.PRODUCT_OWNER_ROLE;
-import static com.ecore.roles.utils.TestData.TESTER_ROLE;
-import static com.ecore.roles.utils.TestData.UUID_1;
-import static io.restassured.RestAssured.when;
-import static java.lang.String.format;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import com.ecore.roles.model.Membership;
+import com.ecore.roles.model.Role;
+import com.ecore.roles.repository.RoleRepository;
+import com.ecore.roles.utils.RestAssuredHelper;
+import com.ecore.roles.web.dto.RoleDto;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class RolesApiTest {
+// removed public access modifier from test class
+class RolesApiTest {
 
     private final RestTemplate restTemplate;
     private final RoleRepository roleRepository;
@@ -56,7 +61,7 @@ public class RolesApiTest {
     void setUp() {
         mockServer = MockRestServiceServer.createServer(restTemplate);
         RestAssuredHelper.setUp(port);
-        Optional<Role> devOpsRole = roleRepository.findByName(DEVOPS_ROLE().getName());
+        Optional<Role> devOpsRole = roleRepository.findByName(buildDevopsRole().getName());
         devOpsRole.ifPresent(roleRepository::delete);
     }
 
@@ -70,7 +75,7 @@ public class RolesApiTest {
 
     @Test
     void shouldCreateNewRole() {
-        Role expectedRole = DEVOPS_ROLE();
+        Role expectedRole = buildDevopsRole();
 
         RoleDto actualRole = createRole(expectedRole)
                 .statusCode(201)
@@ -99,7 +104,7 @@ public class RolesApiTest {
 
     @Test
     void shouldFailToCreateNewRoleWhenNameAlreadyExists() {
-        createRole(DEVELOPER_ROLE())
+        createRole(buildDeveloperRole())
                 .validate(400, "Role already exists");
     }
 
@@ -108,15 +113,18 @@ public class RolesApiTest {
         RoleDto[] roles = getRoles()
                 .extract().as(RoleDto[].class);
 
-        assertThat(roles.length).isGreaterThanOrEqualTo(3);
-        assertThat(roles).contains(RoleDto.fromModel(DEVELOPER_ROLE()));
-        assertThat(roles).contains(RoleDto.fromModel(PRODUCT_OWNER_ROLE()));
-        assertThat(roles).contains(RoleDto.fromModel(TESTER_ROLE()));
+        // chained assertions and changed to more meaningful method
+        assertThat(roles)
+            .hasSizeGreaterThanOrEqualTo(3)
+            .contains(
+                RoleDto.fromModel(buildDeveloperRole()),
+                RoleDto.fromModel(buildProductOwnerRole()),
+                RoleDto.fromModel(buildTesterRole()));
     }
 
     @Test
     void shouldGetRoleById() {
-        Role expectedRole = DEVELOPER_ROLE();
+        Role expectedRole = buildDeveloperRole();
 
         getRole(expectedRole.getId())
                 .statusCode(200)
@@ -131,8 +139,9 @@ public class RolesApiTest {
 
     @Test
     void shouldGetRoleByUserIdAndTeamId() {
-        Membership expectedMembership = DEFAULT_MEMBERSHIP();
-        mockGetTeamById(mockServer, ORDINARY_CORAL_LYNX_TEAM_UUID, ORDINARY_CORAL_LYNX_TEAM());
+        Membership expectedMembership = buildDefaultMembership();
+        mockGetTeamById(mockServer, ORDINARY_CORAL_LYNX_TEAM_UUID, buildOrdinaryCoralLynxTeam());
+        mockGetUserById(mockServer, expectedMembership.getUserId(), buildGianniUser());
         createMembership(expectedMembership)
                 .statusCode(201);
 
@@ -155,8 +164,18 @@ public class RolesApiTest {
 
     @Test
     void shouldFailToGetRoleByUserIdAndTeamIdWhenItDoesNotExist() {
+        mockGetUserById(mockServer, GIANNI_USER_UUID, buildGianniUser());
         mockGetTeamById(mockServer, UUID_1, null);
         getRole(GIANNI_USER_UUID, UUID_1)
                 .validate(404, format("Team %s not found", UUID_1));
+    }
+
+    @Test
+    void shouldFailToGetRoleByUserIdAndTeamIdWhenUserDoesntBelongToTeam() {
+        mockGetUserById(mockServer, UUID_1, buildUserWithoutMembership());
+        mockGetTeamById(mockServer, ORDINARY_CORAL_LYNX_TEAM_UUID, buildOrdinaryCoralLynxTeam());
+        getRole(UUID_1, ORDINARY_CORAL_LYNX_TEAM_UUID)
+                .validate(400, 
+                "Invalid 'User' object. The provided user doesn't belong to the provided team.");
     }
 }

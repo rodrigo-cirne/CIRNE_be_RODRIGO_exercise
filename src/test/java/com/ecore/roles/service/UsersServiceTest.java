@@ -11,7 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import static com.ecore.roles.utils.TestData.GIANNI_USER;
+import static com.ecore.roles.utils.TestData.buildGianniUser;
 import static com.ecore.roles.utils.TestData.UUID_1;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
@@ -26,7 +26,7 @@ class UsersServiceTest {
 
     @Test
     void shouldGetUserWhenUserIdExists() {
-        User gianniUser = GIANNI_USER();
+        User gianniUser = buildGianniUser();
         when(usersClient.getUser(UUID_1))
                 .thenReturn(ResponseEntity
                         .status(HttpStatus.OK)
