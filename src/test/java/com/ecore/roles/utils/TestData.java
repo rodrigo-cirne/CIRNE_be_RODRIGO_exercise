@@ -27,30 +27,30 @@ public class TestData {
     public static final UUID DEFAULT_MEMBERSHIP_UUID =
             UUID.fromString("98de61a0-b9e3-11ec-8422-0242ac120002");
 
-    public static Role DEVELOPER_ROLE() {
+    public static Role buildDeveloperRole() { // renamed to keep method naming convention
         return Role.builder()
                 .id(DEVELOPER_ROLE_UUID)
                 .name("Developer").build();
     }
 
-    public static Role PRODUCT_OWNER_ROLE() {
+    public static Role buildProductOwnerRole() { // renamed to keep method naming convention
         return Role.builder()
                 .id(PRODUCT_OWNER_UUID)
                 .name("Product Owner").build();
     }
 
-    public static Role TESTER_ROLE() {
+    public static Role buildTesterRole() { // renamed to keep method naming convention
         return Role.builder()
                 .id(TESTER_ROLE_UUID)
                 .name("Tester").build();
     }
 
-    public static Role DEVOPS_ROLE() {
+    public static Role buildDevopsRole() { // renamed to keep method naming convention
         return Role.builder()
                 .name("DevOps").build();
     }
 
-    public static Team ORDINARY_CORAL_LYNX_TEAM(boolean full) {
+    public static Team buildOrdinaryCoralLynxTeam(boolean full) { // renamed to keep method naming convention
         Team team = Team.builder()
                 .id(ORDINARY_CORAL_LYNX_TEAM_UUID)
                 .name("System Team").build();
@@ -61,11 +61,11 @@ public class TestData {
         return team;
     }
 
-    public static Team ORDINARY_CORAL_LYNX_TEAM() {
-        return ORDINARY_CORAL_LYNX_TEAM(true);
+    public static Team buildOrdinaryCoralLynxTeam() { // renamed to keep method naming convention
+        return buildOrdinaryCoralLynxTeam(true);
     }
 
-    public static User GIANNI_USER(boolean full) {
+    public static User buildGianniUser(boolean full) { // renamed to keep method naming convention
         User user = User.builder()
                 .id(GIANNI_USER_UUID)
                 .displayName("gianniWehner").build();
@@ -78,23 +78,31 @@ public class TestData {
         return user;
     }
 
-    public static User GIANNI_USER() {
-        return GIANNI_USER(true);
+    public static User buildGianniUser() { // renamed to keep method naming convention
+        return buildGianniUser(true);
     }
 
-    public static Membership DEFAULT_MEMBERSHIP() {
+    // new method to create a User that doesn't belong to Coral Lynx Team
+    public static User buildUserWithoutMembership() {
+        return User.builder()
+                .id(UUID_4)
+                .displayName("notAMember")
+                .build();
+    }
+
+    public static Membership buildDefaultMembership() { // renamed to keep method naming convention
         return Membership.builder()
                 .id(DEFAULT_MEMBERSHIP_UUID)
-                .role(DEVELOPER_ROLE())
+                .role(buildDeveloperRole())
                 .userId(GIANNI_USER_UUID)
                 .teamId(ORDINARY_CORAL_LYNX_TEAM_UUID)
                 .build();
     }
 
-    public static Membership INVALID_MEMBERSHIP() {
+    public static Membership buildInvalidMembership() { // renamed to keep method naming convention
         return Membership.builder()
                 .id(DEFAULT_MEMBERSHIP_UUID)
-                .role(DEVELOPER_ROLE())
+                .role(buildDeveloperRole())
                 .userId(UUID_4)
                 .teamId(ORDINARY_CORAL_LYNX_TEAM_UUID)
                 .build();
